@@ -14,6 +14,7 @@ This is a Wemos D1 Mini project (ino) that has:
 - OTA support
 - RSSI sensor
 
+
 Sonoff S20 (code works on any ESP8266 based device, you only need to change ports)
 Including:
 - reconnect when MQTT or WIFI is lost and still listen to button.
