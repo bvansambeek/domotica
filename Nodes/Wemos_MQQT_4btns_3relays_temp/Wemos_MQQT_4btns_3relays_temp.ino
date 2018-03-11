@@ -1,4 +1,7 @@
-//Wemos D1 mini with:
+// Made by bvansambeek, shared under MIT licence
+// Hope you have as much fun as I have when your project succeeds! ;)
+//
+// Wemos D1 mini with:
 //- DS18B20 digital temperature sensor - GND - DATA (D7) - 5v - Put 4.7k resistor between 5v and data
 //- 3 relays
 //- 4 momentary buttons 
