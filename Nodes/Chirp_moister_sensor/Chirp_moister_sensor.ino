@@ -1,4 +1,4 @@
-// Connect VCC to 3v and SDA, SCL and ground to Wemos
+// Connect VCC to 3v and SDA (D2), SCL (D1) and ground to Wemos
 // Also connect D3 to the reset of the Chrip sensor
 // Made by bvansambeek, 2019-02-09 hope this helps someone.
 // Most of the code comes from the site of the sensor:
