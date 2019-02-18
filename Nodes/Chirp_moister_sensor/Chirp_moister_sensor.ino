@@ -1,62 +1,49 @@
-// Connect VCC to 3v and SDA (D2), SCL (D1) and ground to Wemos
-// Also connect D3 to the reset of the Chrip sensor
-// Made by bvansambeek, 2019-02-09 hope this helps someone.
+// Connect VCC to 3v and SDA (D2), SCL (D1) and ground to D8 Wemos
+// Made by bvansambeek, 2019-02-18 hope this helps someone.
 // Most of the code comes from the site of the sensor:
 // https://wemakethings.net/chirp/
+// and this example
+// https://gist.github.com/Miceuz/8ace1cde27671e8e161d
 
 #include <Wire.h>
+#define chirpVCC D5                   // connected to VCC of Chirp
+#define chirpGND D8                   // connected to GND of Chirp
 
-#define chirpreset D3                 // connected to RESET of Chirp
-
-int moisture = 21000;                 // start value that does not make any sense for moisture to go into while loop
-int light;
+int moisture;                 
 
 void setup() {
   Wire.begin();
   Serial.begin(9600);
   Serial.println("setup");
+  
+  pinMode(D1, INPUT_PULLUP);                      // setting D1 and D2 to pullup for better I2C communication
+  pinMode(D2, INPUT_PULLUP);                      // setting D1 and D2 to pullup for better I2C communication
+  
   pinMode(BUILTIN_LED, OUTPUT);
-  digitalWrite(BUILTIN_LED, HIGH);
-  pinMode(chirpreset, OUTPUT); 
-  digitalWrite(chirpreset, HIGH);
+  digitalWrite(BUILTIN_LED, HIGH);                // Wemos buildin_LED off (for better WAF)
+  pinMode(chirpGND, OUTPUT);                      // (option for disabling it during sleep)
+  pinMode(chirpVCC, OUTPUT);                      // (option for disabling it during sleep)
+
+  digitalWrite(chirpVCC, HIGH);                   // Turn on Chirp
+  digitalWrite(chirpGND, LOW);                    // Turn on Chirp
+  delay(100);                                     // Allow some time for chirp to boot
+  writeI2CRegister8bit(0x20, 3);                  // Send something on the I2C bus to put chirp into sensor mode
+  delay(1000);                                    // allow chirp to boot
+
+  // read chirp
+  moisture = readI2CRegister16bit(0x20, 0);       // Read moisture and send to serial monitor
+  Serial.print("Moisture = ");
+  Serial.println(moisture);  
+  digitalWrite(chirpGND, HIGH);                   // Turn off Chirp 
+  digitalWrite(chirpVCC, LOW);                    // Turn off Chirp        
+
+  Serial.println("going to sleep biep biep");
+  int sleepseconds = 5;
+  ESP.deepSleep(sleepseconds * 1000000);
 }
 
-void loop() {  
-  
-  // Put Chirp into sensor mode by resetting in a while loop if the sensor data does not make any sense
-  while (moisture < 0 || 20000 < moisture){      // while loop for setting chirp to slave mode
-    Serial.println("in while loop");             // print to serial monitor to check
-    digitalWrite(BUILTIN_LED, LOW);              // LED on to show it is putting chrip to slave by resetting
-    digitalWrite(chirpreset, LOW);               // reset chirp on
-    delay(200);                                  // wait a little bit; 200ms for pressing button?
-    digitalWrite(chirpreset, HIGH);              // reset chirp off
-    delay(500);                                  // wait a little bit
-    digitalWrite(BUILTIN_LED, HIGH);             // LED off to show it is putting chrip to slave
-    moisture = readI2CRegister16bit(0x20, 0);    // read capacitance register (send I2C communication)
-    Serial.println(moisture);
-    delay(500);
-  } 
-  
-  // make sure the buildin LED is off and 
-  if (0 <= moisture && moisture <= 20000) {
-    digitalWrite(BUILTIN_LED, HIGH);             // LED off, because a valid moisture value was recorded
-    digitalWrite(chirpreset, HIGH);              // reset off
-  }
-
-  // Read moisture and send to serial monitor
-  moisture = readI2CRegister16bit(0x20, 0);      // read capacitance register
-  Serial.print("Moisture = ");
-  Serial.println(moisture);               
-  delay(500);
-
-  // Read light and send to serial monitor (optional, you can remove this part if you do not care about the light)
-  writeI2CRegister8bit(0x20, 3);          // request light measurement 
-  delay(9000);                            // this can take a while
-  light = readI2CRegister16bit(0x20, 4);  // ready light register
-  Serial.print("Light = ");
-  Serial.println(light);
-
-  delay(2000);                            // to prevent the loop going crazy
+void loop() {    
+  // This code is made for ESP8266 Deep Sleep and is therefore not using loop
 }
 
 void writeI2CRegister8bit(int addr, int value) {
